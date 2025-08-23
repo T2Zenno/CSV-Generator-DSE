@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Form to CSV Generator</title>
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            color: #e0e0e0;
+            max-width: 700px;
+            margin: 0 auto;
+            padding: 30px;
+            min-height: 100vh;
+        }
+        h1 {
+            color: #00ffcc;
+            text-shadow: 0 0 10px rgba(0, 255, 204, 0.5);
+            text-align: center;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        p {
+            color: #b0b0b0;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 255, 204, 0.2);
+        }
+        label {
+            margin-top: 15px;
+            color: #00ffcc;
+            font-weight: bold;
+            text-shadow: 0 0 5px rgba(0, 255, 204, 0.3);
+        }
+        input, textarea {
+            padding: 10px;
+            margin-top: 5px;
+            background: #2a2a3e;
+            border: 1px solid #00ffcc;
+            border-radius: 5px;
+            color: #ffffff;
+            font-size: 1em;
+            transition: all 0.3s ease;
+        }
+        input:focus, textarea:focus {
+            outline: none;
+            box-shadow: 0 0 10px rgba(0, 255, 204, 0.5);
+            border-color: #ff00ff;
+        }
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+        button {
+            margin-top: 25px;
+            padding: 12px;
+            background: linear-gradient(45deg, #00ffcc, #ff00ff);
+            color: #ffffff;
+            border: none;
+            border-radius: 5px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+        }
+        button:hover {
+            background: linear-gradient(45deg, #ff00ff, #00ffcc);
+            box-shadow: 0 0 15px rgba(255, 0, 255, 0.5);
+            transform: translateY(-2px);
+        }
+        #preview-section {
+            margin-top: 40px;
+        }
+        #preview-section h2 {
+            color: #ff00ff;
+            text-shadow: 0 0 10px rgba(255, 0, 255, 0.5);
+            font-size: 1.8em;
+        }
+        pre {
+            background: #2a2a3e;
+            padding: 15px;
+            border: 1px solid #ff00ff;
+            border-radius: 5px;
+            color: #e0e0e0;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            box-shadow: 0 0 10px rgba(255, 0, 255, 0.2);
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <h1>Form untuk Membuat CSV</h1>
+    <p>Masukkan nama header pada form di bawah ini. Preview CSV akan muncul secara live di bawah form. Klik tombol untuk download file CSV.</p>
+    
+    <form id="csvForm">
+        <label for="header1">Judul</label>
+        <input type="text" id="header1" name="header1" placeholder="Masukkan Judul..." required>
+        
+        <label for="header2">Deskripsi</label>
+        <textarea id="header2" name="header2" placeholder="Masukkan Deskripsi..." required></textarea>
+        
+        <label for="header3">Lokasi Gambar</label>
+        <input type="text" id="header3" name="header3" placeholder="C:\Tempat\Gambar\Berada.jpg" required>
+        
+        <label for="header4">Tag</label>
+        <input type="text" id="header4" name="header4" placeholder="Masukkan 1 Tag..." required>
+        
+        <label for="header5">Link Website</label>
+        <input type="text" id="header5" name="header5" placeholder="www.contoh.com" required>
+        
+        <button type="button" onclick="generateCSV()">Generate dan Download CSV</button>
+    </form>
+
+    <div id="preview-section">
+        <h2>Live Preview CSV</h2>
+        <pre id="csvPreview">(isi akan muncul saat Anda mengisi form)</pre>
+    </div>
+
+    <script>
+        // Fungsi untuk escape nilai CSV dengan penanganan karakter khusus
+        function escapeCSV(value) {
+            if (!value) return '';
+            const strValue = String(value);
+            // Only wrap in quotes if the value contains commas, quotes, or newlines
+            if (strValue.includes(',') || strValue.includes('"') || strValue.includes('\n')) {
+                return `"${strValue.replace(/"/g, '""')}"`;
+            }
+            return strValue;
+        }
+
+        // Fungsi untuk mengganti / menjadi \ pada lokasi gambar
+        function convertSlashes(value) {
+            return value.replace(/\//g, '\\');
+        }
+
+        // Fungsi untuk update preview
+        function updatePreview() {
+            const header1 = document.getElementById('header1').value;
+            const header2 = document.getElementById('header2').value;
+            const header3 = convertSlashes(document.getElementById('header3').value);
+            const header4 = document.getElementById('header4').value;
+            const header5 = document.getElementById('header5').value;
+
+            // Buat baris header CSV
+            const headerRow = [
+                escapeCSV(header1),
+                escapeCSV(header2),
+                escapeCSV(header3),
+                escapeCSV(header4),
+                escapeCSV(header5)
+            ].join(',');
+
+            document.getElementById('csvPreview').innerText = headerRow + '\n';
+        }
+
+        // Fungsi untuk generate dan download CSV
+        function generateCSV() {
+            const header1 = document.getElementById('header1').value;
+            const header2 = document.getElementById('header2').value;
+            const header3 = convertSlashes(document.getElementById('header3').value);
+            const header4 = document.getElementById('header4').value;
+            const header5 = document.getElementById('header5').value;
+
+            // Buat baris header CSV
+            const headerRow = [
+                escapeCSV(header1),
+                escapeCSV(header2),
+                escapeCSV(header3),
+                escapeCSV(header4),
+                escapeCSV(header5)
+            ].join(',');
+
+            const csvContent = headerRow + '\n';
+
+            // Gunakan BOM untuk mendukung UTF-8 di beberapa aplikasi
+            const BOM = '\uFEFF';
+            const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+
+            const downloadLink = document.createElement('a');
+            downloadLink.href = url;
+            downloadLink.download = 'dse.csv';
+            document.body.appendChild(downloadLink);
+            downloadLink.click();
+            document.body.removeChild(downloadLink);
+            URL.revokeObjectURL(url);
+        }
+
+        // Tambahkan event listener untuk live preview pada setiap input
+        const inputs = document.querySelectorAll('#csvForm input, #csvForm textarea');
+        inputs.forEach(input => {
+            input.addEventListener('input', updatePreview);
+        });
+
+        // Update preview awal
+        updatePreview();
+    </script>
+</body>
+</html>

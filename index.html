@@ -80,10 +80,20 @@
         #preview-section {
             margin-top: 40px;
         }
+        #preview-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
         #preview-section h2 {
             color: #ff00ff;
             text-shadow: 0 0 10px rgba(255, 0, 255, 0.5);
             font-size: 1.8em;
+            margin: 0;
+        }
+        #copyButton {
+            padding: 8px 16px;
+            font-size: 0.9em;
         }
         pre {
             background: #2a2a3e;
@@ -95,6 +105,9 @@
             white-space: pre-wrap;
             word-wrap: break-word;
             box-shadow: 0 0 10px rgba(255, 0, 255, 0.2);
+            min-height: 60px; /* Minimum height for empty state */
+            height: auto; /* Allow dynamic height */
+            overflow: auto; /* Handle overflow for zoom */
         }
     </style>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
@@ -123,7 +136,10 @@
     </form>
 
     <div id="preview-section">
-        <h2>Live Preview CSV</h2>
+        <div id="preview-header">
+            <h2>Live Preview CSV</h2>
+            <button id="copyButton" type="button" onclick="copyCSV()">Copy to Clipboard</button>
+        </div>
         <pre id="csvPreview">(isi akan muncul saat Anda mengisi form)</pre>
     </div>
 
@@ -162,6 +178,17 @@
             ].join(',');
 
             document.getElementById('csvPreview').innerText = headerRow + '\n';
+        }
+
+        // Fungsi untuk menyalin CSV ke clipboard
+        function copyCSV() {
+            const csvText = document.getElementById('csvPreview').innerText;
+            navigator.clipboard.writeText(csvText).then(() => {
+                alert('CSV content copied to clipboard!');
+            }).catch(err => {
+                console.error('Failed to copy: ', err);
+                alert('Failed to copy CSV content.');
+            });
         }
 
         // Fungsi untuk generate dan download CSV
@@ -207,5 +234,4 @@
         updatePreview();
     </script>
 </body>
-
 </html>

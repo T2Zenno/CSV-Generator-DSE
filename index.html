@@ -77,25 +77,30 @@
             box-shadow: 0 0 15px rgba(255, 0, 255, 0.5);
             transform: translateY(-2px);
         }
-        #preview-section {
+        #preview-section, #editable-preview-section {
             margin-top: 40px;
         }
-        #preview-header {
+        #preview-header, #editable-preview-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
-        #preview-section h2 {
+        #preview-section h2, #editable-preview-section h2 {
             color: #ff00ff;
             text-shadow: 0 0 10px rgba(255, 0, 255, 0.5);
             font-size: 1.8em;
             margin: 0;
         }
-        #copyButton {
+        #copyButton, #toggleNewlineButton, #autocorrectButton {
             padding: 8px 16px;
             font-size: 0.9em;
+            margin-left: 10px;
         }
-        pre {
+        #toggleNewlineButton.active {
+            background: linear-gradient(45deg, #ff00ff, #00ffcc);
+            box-shadow: 0 0 15px rgba(255, 0, 255, 0.5);
+        }
+        pre, textarea#editableCsvPreview {
             background: #2a2a3e;
             padding: 15px;
             border: 1px solid #ff00ff;
@@ -105,9 +110,11 @@
             white-space: pre-wrap;
             word-wrap: break-word;
             box-shadow: 0 0 10px rgba(255, 0, 255, 0.2);
-            min-height: 60px; /* Minimum height for empty state */
-            height: auto; /* Allow dynamic height */
-            overflow: auto; /* Handle overflow for zoom */
+            min-height: 60px;
+            height: auto;
+            overflow: auto;
+            width: 100%;
+            box-sizing: border-box;
         }
     </style>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
@@ -138,18 +145,37 @@
     <div id="preview-section">
         <div id="preview-header">
             <h2>Live Preview CSV</h2>
-            <button id="copyButton" type="button" onclick="copyCSV()">Copy to Clipboard</button>
+            <div>
+                <button id="copyButton" type="button" onclick="copyCSV()">Copy to Clipboard</button>
+                <button id="toggleNewlineButton" type="button" onclick="toggleNewline()">Convert Enter to \n</button>
+            </div>
         </div>
         <pre id="csvPreview">(isi akan muncul saat Anda mengisi form)</pre>
     </div>
 
+    <div id="editable-preview-section">
+        <div id="editable-preview-header">
+            <h2>Editable CSV Preview</h2>
+            <div>
+                <button id="autocorrectButton" type="button" onclick="autocorrectCSV()">Autocorrect CSV</button>
+            </div>
+        </div>
+        <textarea id="editableCsvPreview" placeholder="(isi akan muncul saat Anda mengisi form atau edit di sini)"></textarea>
+    </div>
+
     <script>
+        let convertNewlines = false;
+
         // Fungsi untuk escape nilai CSV dengan penanganan karakter khusus
         function escapeCSV(value) {
             if (!value) return '';
-            const strValue = String(value);
-            // Only wrap in quotes if the value contains commas, quotes, or newlines
-            if (strValue.includes(',') || strValue.includes('"') || strValue.includes('\n')) {
+            let strValue = String(value);
+            // Convert newlines to \n if toggle is active
+            if (convertNewlines) {
+                strValue = strValue.replace(/\n/g, '\\n');
+            }
+            // Only wrap in quotes if the value contains commas, quotes, or newlines (or \n if converted)
+            if (strValue.includes(',') || strValue.includes('"') || strValue.includes('\n') || strValue.includes('\\n')) {
                 return `"${strValue.replace(/"/g, '""')}"`;
             }
             return strValue;
@@ -158,6 +184,49 @@
         // Fungsi untuk mengganti / menjadi \ pada lokasi gambar
         function convertSlashes(value) {
             return value.replace(/\//g, '\\');
+        }
+
+        // Fungsi untuk parse CSV dengan benar, menangani koma dalam kutipan
+        function parseCSV(csvText) {
+            const fields = [];
+            let currentField = '';
+            let insideQuotes = false;
+            csvText = csvText.trim();
+
+            for (let i = 0; i < csvText.length; i++) {
+                const char = csvText[i];
+                if (char === '"') {
+                    if (insideQuotes && csvText[i + 1] === '"') {
+                        currentField += '"';
+                        i++;
+                    } else {
+                        insideQuotes = !insideQuotes;
+                    }
+                } else if (char === ',' && !insideQuotes) {
+                    fields.push(currentField);
+                    currentField = '';
+                } else {
+                    currentField += char;
+                }
+            }
+            fields.push(currentField);
+            return fields.map(field => {
+                field = field.trim();
+                field = field.replace(/^"|"$/g, '').replace(/""/g, '"');
+                if (convertNewlines) {
+                    field = field.replace(/\\n/g, '\n');
+                }
+                return field;
+            });
+        }
+
+        // Fungsi untuk toggle convert newlines
+        function toggleNewline() {
+            convertNewlines = !convertNewlines;
+            const toggleButton = document.getElementById('toggleNewlineButton');
+            toggleButton.classList.toggle('active');
+            toggleButton.textContent = convertNewlines ? 'Convert Enter to \\n (ON)' : 'Convert Enter to \\n (OFF)';
+            updatePreview();
         }
 
         // Fungsi untuk update preview
@@ -178,6 +247,7 @@
             ].join(',');
 
             document.getElementById('csvPreview').innerText = headerRow + '\n';
+            document.getElementById('editableCsvPreview').value = headerRow + '\n';
         }
 
         // Fungsi untuk menyalin CSV ke clipboard
@@ -191,28 +261,43 @@
             });
         }
 
+        // Fungsi untuk autocorrect CSV
+        function autocorrectCSV() {
+            let csvText = document.getElementById('editableCsvPreview').value.trim();
+            if (!csvText) return;
+
+            // Parse CSV untuk mendapatkan field yang benar
+            let fields = parseCSV(csvText);
+
+            // Re-escape fields untuk format CSV yang benar
+            fields = fields.map(field => escapeCSV(field));
+
+            // Rejoin fields dan update kedua preview
+            const correctedCSV = fields.join(',') + '\n';
+            document.getElementById('editableCsvPreview').value = correctedCSV;
+            document.getElementById('csvPreview').innerText = correctedCSV;
+
+            // Update form fields dari CSV yang dikoreksi
+            updateFormFromEditablePreview(correctedCSV);
+        }
+
+        // Fungsi untuk update form dari editable preview
+        function updateFormFromEditablePreview(csvText) {
+            const fields = parseCSV(csvText);
+            if (fields.length >= 5) {
+                document.getElementById('header1').value = fields[0];
+                document.getElementById('header2').value = fields[1];
+                document.getElementById('header3').value = fields[2].replace(/\\/g, '/');
+                document.getElementById('header4').value = fields[3];
+                document.getElementById('header5').value = fields[4];
+            }
+        }
+
         // Fungsi untuk generate dan download CSV
         function generateCSV() {
-            const header1 = document.getElementById('header1').value;
-            const header2 = document.getElementById('header2').value;
-            const header3 = convertSlashes(document.getElementById('header3').value);
-            const header4 = document.getElementById('header4').value;
-            const header5 = document.getElementById('header5').value;
-
-            // Buat baris header CSV
-            const headerRow = [
-                escapeCSV(header1),
-                escapeCSV(header2),
-                escapeCSV(header3),
-                escapeCSV(header4),
-                escapeCSV(header5)
-            ].join(',');
-
-            const csvContent = headerRow + '\n';
-
-            // Gunakan BOM untuk mendukung UTF-8 di beberapa aplikasi
+            const csvText = document.getElementById('editableCsvPreview').value || document.getElementById('csvPreview').innerText;
             const BOM = '\uFEFF';
-            const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const blob = new Blob([BOM + csvText], { type: 'text/csv;charset=utf-8;' });
             const url = URL.createObjectURL(blob);
 
             const downloadLink = document.createElement('a');
@@ -228,6 +313,13 @@
         const inputs = document.querySelectorAll('#csvForm input, #csvForm textarea');
         inputs.forEach(input => {
             input.addEventListener('input', updatePreview);
+        });
+
+        // Tambahkan event listener untuk editable preview
+        document.getElementById('editableCsvPreview').addEventListener('input', () => {
+            const csvText = document.getElementById('editableCsvPreview').value;
+            document.getElementById('csvPreview').innerText = csvText;
+            updateFormFromEditablePreview(csvText);
         });
 
         // Update preview awal

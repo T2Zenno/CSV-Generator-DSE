@@ -91,12 +91,12 @@
             font-size: 1.8em;
             margin: 0;
         }
-        #copyButton, #toggleNewlineButton, #autocorrectButton {
+        #copyButton, #toNewlineButton, #toEnterButton, #autocorrectButton {
             padding: 8px 16px;
             font-size: 0.9em;
             margin-left: 10px;
         }
-        #toggleNewlineButton.active {
+        #toNewlineButton.active, #toEnterButton.active {
             background: linear-gradient(45deg, #ff00ff, #00ffcc);
             box-shadow: 0 0 15px rgba(255, 0, 255, 0.5);
         }
@@ -147,7 +147,8 @@
             <h2>Live Preview CSV</h2>
             <div>
                 <button id="copyButton" type="button" onclick="copyCSV()">Copy to Clipboard</button>
-                <button id="toggleNewlineButton" type="button" onclick="toggleNewline()">Convert Enter to \n</button>
+                <button id="toNewlineButton" type="button" onclick="convertToNewline()">\n</button>
+                <button id="toEnterButton" type="button" onclick="convertToEnter()">Enter</button>
             </div>
         </div>
         <pre id="csvPreview">(isi akan muncul saat Anda mengisi form)</pre>
@@ -170,7 +171,7 @@
         function escapeCSV(value) {
             if (!value) return '';
             let strValue = String(value);
-            // Convert newlines to \n if toggle is active
+            // Convert newlines to \n if convertNewlines is true
             if (convertNewlines) {
                 strValue = strValue.replace(/\n/g, '\\n');
             }
@@ -213,19 +214,26 @@
             return fields.map(field => {
                 field = field.trim();
                 field = field.replace(/^"|"$/g, '').replace(/""/g, '"');
-                if (convertNewlines) {
+                if (!convertNewlines) {
                     field = field.replace(/\\n/g, '\n');
                 }
                 return field;
             });
         }
 
-        // Fungsi untuk toggle convert newlines
-        function toggleNewline() {
-            convertNewlines = !convertNewlines;
-            const toggleButton = document.getElementById('toggleNewlineButton');
-            toggleButton.classList.toggle('active');
-            toggleButton.textContent = convertNewlines ? 'Convert Enter to \\n (ON)' : 'Convert Enter to \\n (OFF)';
+        // Fungsi untuk konversi ke \n
+        function convertToNewline() {
+            convertNewlines = true;
+            document.getElementById('toNewlineButton').classList.add('active');
+            document.getElementById('toEnterButton').classList.remove('active');
+            updatePreview();
+        }
+
+        // Fungsi untuk konversi ke Enter
+        function convertToEnter() {
+            convertNewlines = false;
+            document.getElementById('toEnterButton').classList.add('active');
+            document.getElementById('toNewlineButton').classList.remove('active');
             updatePreview();
         }
 
@@ -322,9 +330,11 @@
             updateFormFromEditablePreview(csvText);
         });
 
+        // Inisialisasi state tombol
+        document.getElementById('toEnterButton').classList.add('active');
+
         // Update preview awal
         updatePreview();
     </script>
 </body>
 </html>
-

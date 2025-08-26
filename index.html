@@ -244,6 +244,7 @@
             const header3 = convertSlashes(document.getElementById('header3').value);
             const header4 = document.getElementById('header4').value;
             const header5 = document.getElementById('header5').value;
+            const header6 = header2.replace(/\n/g, '${KEY_ENTER}');
 
             // Buat baris header CSV
             const headerRow = [
@@ -251,7 +252,8 @@
                 escapeCSV(header2),
                 escapeCSV(header3),
                 escapeCSV(header4),
-                escapeCSV(header5)
+                escapeCSV(header5),
+                escapeCSV(header6)
             ].join(',');
 
             document.getElementById('csvPreview').innerText = headerRow + '\n';
@@ -292,12 +294,13 @@
         // Fungsi untuk update form dari editable preview
         function updateFormFromEditablePreview(csvText) {
             const fields = parseCSV(csvText);
-            if (fields.length >= 5) {
+            if (fields.length >= 6) {
                 document.getElementById('header1').value = fields[0];
                 document.getElementById('header2').value = fields[1];
                 document.getElementById('header3').value = fields[2].replace(/\\/g, '/');
                 document.getElementById('header4').value = fields[3];
                 document.getElementById('header5').value = fields[4];
+                // Note: header6 is not used to update header2 since they share the same source
             }
         }
 

@@ -14,6 +14,24 @@
             padding: 30px;
             min-height: 100vh;
         }
+        nav {
+            border-bottom: 2px solid #00ffcc;
+            padding: 15px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+        }
+        nav a {
+            color: #00ffcc;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1.1em;
+            transition: color 0.3s ease;
+        }
+        nav a:hover {
+            color: #ff00ff;
+        }
         h1 {
             color: #00ffcc;
             text-shadow: 0 0 10px rgba(0, 255, 204, 0.5);
@@ -120,6 +138,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
 </head>
 <body>
+    <nav>
+        <a href="image-converter.html">Image to PDF/Diffuser</a>
+    </nav>
     <h1>Form untuk Membuat CSV</h1>
     <p>Masukkan nama header pada form di bawah ini. Preview CSV akan muncul secara live di bawah form. Klik tombol untuk download file CSV.</p>
     
@@ -133,11 +154,14 @@
         <label for="header3">Lokasi Gambar</label>
         <input type="text" id="header3" name="header3" placeholder="C:\Tempat\Gambar\Berada.jpg" required>
         
-        <label for="header4">Tag</label>
-        <input type="text" id="header4" name="header4" placeholder="Masukkan 1 Tag..." required>
+        <label for="header4">Lokasi PDF</label>
+        <input type="text" id="header4" name="header4" placeholder="C:\Tempat\PDF\Berada.pdf" required>
         
-        <label for="header5">Link Website</label>
-        <input type="text" id="header5" name="header5" placeholder="www.contoh.com" required>
+        <label for="header5">Tag</label>
+        <input type="text" id="header5" name="header5" placeholder="Masukkan 1 Tag..." required>
+        
+        <label for="header6">Link Website</label>
+        <input type="text" id="header6" name="header6" placeholder="www.contoh.com" required>
         
         <button type="button" onclick="generateCSV()">Generate dan Download CSV</button>
     </form>
@@ -182,7 +206,7 @@
             return strValue;
         }
 
-        // Fungsi untuk mengganti / menjadi \ pada lokasi gambar
+        // Fungsi untuk mengganti / menjadi \ pada lokasi file
         function convertSlashes(value) {
             return value.replace(/\//g, '\\');
         }
@@ -242,18 +266,20 @@
             const header1 = document.getElementById('header1').value;
             const header2 = document.getElementById('header2').value;
             const header3 = convertSlashes(document.getElementById('header3').value);
-            const header4 = document.getElementById('header4').value;
+            const header4 = convertSlashes(document.getElementById('header4').value);
             const header5 = document.getElementById('header5').value;
-            const header6 = header2.replace(/\n/g, '${KEY_ENTER}');
+            const header6 = document.getElementById('header6').value;
+            const header7 = header2.replace(/\n/g, '${KEY_ENTER}');
 
             // Buat baris header CSV
             const headerRow = [
                 escapeCSV(header1),
                 escapeCSV(header2),
                 escapeCSV(header3),
-                escapeCSV(header4),
                 escapeCSV(header5),
-                escapeCSV(header6)
+                escapeCSV(header6),
+                escapeCSV(header7),
+                escapeCSV(header4)
             ].join(',');
 
             document.getElementById('csvPreview').innerText = headerRow + '\n';
@@ -294,13 +320,14 @@
         // Fungsi untuk update form dari editable preview
         function updateFormFromEditablePreview(csvText) {
             const fields = parseCSV(csvText);
-            if (fields.length >= 6) {
+            if (fields.length >= 7) {
                 document.getElementById('header1').value = fields[0];
                 document.getElementById('header2').value = fields[1];
                 document.getElementById('header3').value = fields[2].replace(/\\/g, '/');
-                document.getElementById('header4').value = fields[3];
-                document.getElementById('header5').value = fields[4];
-                // Note: header6 is not used to update header2 since they share the same source
+                document.getElementById('header4').value = fields[6].replace(/\\/g, '/');
+                document.getElementById('header5').value = fields[3];
+                document.getElementById('header6').value = fields[4];
+                // Note: header7 is not used to update header2 since they share the same source
             }
         }
 

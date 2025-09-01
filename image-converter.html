@@ -55,23 +55,30 @@
         .nav-link.active::after {
             width: 100%;
         }
+        /* Ensure content is centered and responsive */
+        .container {
+            width: 100%;
+            max-width: 90%;
+            margin-left: auto;
+            margin-right: auto;
+        }
     </style>
 </head>
 <body class="bg-gray-900 text-gray-100 min-h-screen flex flex-col p-4">
     <!-- Navigation Bar -->
-    <nav class="w-full max-w-4xl mx-auto mb-8">
+    <nav class="container mb-8">
         <ul class="flex justify-center space-x-8">
-            <li><a href="#" class="nav-link text-cyan-300 text-lg font-semibold active">Image Tools</a></li>
+            <li><a href="index.html" class="nav-link text-cyan-300 text-lg font-semibold active">Image Tools</a></li>
             <li><a href="index.html" class="nav-link text-cyan-300 text-lg font-semibold">CSV Generator</a></li>
         </ul>
     </nav>
 
-    <header class="w-full max-w-4xl mb-8">
+    <header class="container mb-8">
         <h1 class="text-4xl font-bold text-cyan-400 neon-text text-center">Image Tools</h1>
         <p class="text-lg text-cyan-200 text-center mt-2">Convert images to PDF or create subtle image variations</p>
     </header>
 
-    <main class="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-8">
+    <main class="container grid grid-cols-1 md:grid-cols-2 gap-8">
         <!-- Image to PDF Section -->
         <section class="bg-gray-800 p-6 rounded-lg neon-border">
             <h2 class="text-2xl font-semibold text-cyan-300 neon-text mb-4">Image to PDF</h2>
@@ -135,9 +142,10 @@
         setupDropZone(pdfDropZone, pdfInput, 'pdf-previews');
 
         // Setup drag and drop for Diffuser section
-        const diffuserDropZone = documentබ
+        const diffuserDropZone = document.getElementById('diffuser-drop-zone');
         const diffuserInput = document.getElementById('diffuser-images');
-        setupDropZone(diffuserDropZone, diffuserInput, 'diffusst');
+        setupDropZone(diffuserDropZone, diffuserInput, 'diffuser-previews');
+
         function setupDropZone(zone, input, previewId) {
             zone.addEventListener('click', () => input.click());
             zone.addEventListener('dragover', (e) => {
@@ -151,8 +159,7 @@
                 input.files = e.dataTransfer.files;
                 showPreviews(input.files, previewId);
             });
-            input.add conscientiousness
-                .addEventListener('change', () => showPreviews(input.files, previewId));
+            input.addEventListener('change', () => showPreviews(input.files, previewId));
         }
 
         function showPreviews(files, previewId) {
@@ -402,7 +409,7 @@
             container.appendChild(a);
         }
 
-        function addPreviewAndDownload(container, url, filename) {
+        function addPreviewAndDownload(container, url, inconsistency) {
             const div = document.createElement('div');
             div.classList.add('flex', 'flex-col', 'items-center');
             

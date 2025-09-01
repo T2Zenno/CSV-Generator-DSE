@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Tools - Dark Neon</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/piexifjs@1.0.6/piexif.min.js"></script>
+    <style>
+        /* Toned down neon styles */
+        .neon-text {
+            text-shadow: 0 0 3px #0ff, 0 0 6px #0ff;
+        }
+        .neon-border {
+            box-shadow: 0 0 5px #0ff, inset 0 0 5px #0ff;
+        }
+        .neon-button {
+            box-shadow: 0 0 3px #0ff, 0 0 6px #0ff;
+        }
+        .neon-button:hover {
+            box-shadow: 0 0 6px #0ff, 0 0 12px #0ff;
+        }
+        .drop-zone {
+            border: 2px dashed #0ff;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .drop-zone:hover {
+            background: rgba(0, 255, 255, 0.1);
+        }
+        /* Navbar bottom line style */
+        .nav-link {
+            position: relative;
+            transition: color 0.3s;
+        }
+        .nav-link:hover {
+            color: #0ff;
+        }
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: -2px;
+            left: 0;
+            background-color: #0ff;
+            transition: width 0.3s;
+        }
+        .nav-link:hover::after {
+            width: 100%;
+        }
+        .nav-link.active::after {
+            width: 100%;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-100 min-h-screen flex flex-col p-4">
+    <!-- Navigation Bar -->
+    <nav class="w-full max-w-4xl mx-auto mb-8">
+        <ul class="flex justify-center space-x-8">
+            <li><a href="#" class="nav-link text-cyan-300 text-lg font-semibold active">Image Tools</a></li>
+            <li><a href="index.html" class="nav-link text-cyan-300 text-lg font-semibold">CSV Generator</a></li>
+        </ul>
+    </nav>
+
+    <header class="w-full max-w-4xl mb-8">
+        <h1 class="text-4xl font-bold text-cyan-400 neon-text text-center">Image Tools</h1>
+        <p class="text-lg text-cyan-200 text-center mt-2">Convert images to PDF or create subtle image variations</p>
+    </header>
+
+    <main class="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-8">
+        <!-- Image to PDF Section -->
+        <section class="bg-gray-800 p-6 rounded-lg neon-border">
+            <h2 class="text-2xl font-semibold text-cyan-300 neon-text mb-4">Image to PDF</h2>
+            <p class="text-gray-300 mb-4">Upload images and convert to PDF. Supports batches.</p>
+            
+            <div id="pdf-drop-zone" class="drop-zone mb-4">
+                <p>Drag & drop images here or click to upload</p>
+                <input type="file" id="pdf-images" multiple accept="image/*" class="hidden">
+            </div>
+            
+            <div id="pdf-previews" class="grid grid-cols-3 gap-2 mb-4"></div>
+            
+            <div class="mb-4">
+                <label class="block text-gray-300 mb-2">Output Option:</label>
+                <div class="flex items-center">
+                    <input type="radio" id="one-pdf" name="pdf-option" value="one" checked class="mr-2">
+                    <label for="one-pdf" class="mr-4 text-gray-300">One PDF</label>
+                    <input type="radio" id="separate-pdf" name="pdf-option" value="separate" class="mr-2">
+                    <label for="separate-pdf" class="text-gray-300">Separate PDFs</label>
+                </div>
+            </div>
+            
+            <button id="convert-to-pdf" class="w-full py-2 px-4 bg-cyan-600 text-white rounded neon-button">Convert to PDF</button>
+            
+            <div id="pdf-download-links" class="mt-4"></div>
+        </section>
+
+        <!-- Image Diffuser Section -->
+        <section class="bg-gray-800 p-6 rounded-lg neon-border">
+            <h2 class="text-2xl font-semibold text-cyan-300 neon-text mb-4">Image Diffuser/Duplicator</h2>
+            <p class="text-gray-300 mb-4">Upload images and create subtle variations (e.g., noise, brightness, pixel tweaks).</p>
+            
+            <div id="diffuser-drop-zone" class="drop-zone mb-4">
+                <p>Drag & drop images here or click to upload</p>
+                <input type="file" id="diffuser-images" multiple accept="image/*" class="hidden">
+            </div>
+            
+            <div id="diffuser-previews" class="grid grid-cols-3 gap-2 mb-4"></div>
+            
+            <div class="mb-4">
+                <label class="block text-gray-300 mb-2">Modifications (select multiple):</label>
+                <div class="flex flex-col">
+                    <label class="flex items-center mb-2"><input type="checkbox" id="add-noise" class="mr-2" checked> Add small Gaussian noise to 100-1000 random spots</label>
+                    <label class="flex items-center mb-2"><input type="checkbox" id="adjust-brightness" class="mr-2"> Adjust brightness (random 0.1-1%)</label>
+                    <label class="flex items-center mb-2"><input type="checkbox" id="tweak-color" class="mr-2"> Tweak colors slightly in 100-1000 random spots</label>
+                    <label class="flex items-center mb-2"><input type="checkbox" id="random-pixel" class="mr-2"> Modify ~50% random pixels slightly</label>
+                    <label class="flex items-center mb-2"><input type="checkbox" id="randomize-metadata" class="mr-2"> Randomize metadata (e.g., date, software)</label>
+                </div>
+            </div>
+            
+            <button id="diffuse-images" class="w-full py-2 px-4 bg-cyan-600 text-white rounded neon-button">Create Variations</button>
+            
+            <div id="diffuser-download-links" class="mt-4 grid grid-cols-2 gap-4"></div>
+        </section>
+    </main>
+
+    <script>
+        // Setup drag and drop for PDF section
+        const pdfDropZone = document.getElementById('pdf-drop-zone');
+        const pdfInput = document.getElementById('pdf-images');
+        setupDropZone(pdfDropZone, pdfInput, 'pdf-previews');
+
+        // Setup drag and drop for Diffuser section
+        const diffuserDropZone = documentබ
+        const diffuserInput = document.getElementById('diffuser-images');
+        setupDropZone(diffuserDropZone, diffuserInput, 'diffusst');
+        function setupDropZone(zone, input, previewId) {
+            zone.addEventListener('click', () => input.click());
+            zone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                zone.classList.add('bg-cyan-900');
+            });
+            zone.addEventListener('dragleave', () => zone.classList.remove('bg-cyan-900'));
+            zone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                zone.classList.remove('bg-cyan-900');
+                input.files = e.dataTransfer.files;
+                showPreviews(input.files, previewId);
+            });
+            input.add conscientiousness
+                .addEventListener('change', () => showPreviews(input.files, previewId));
+        }
+
+        function showPreviews(files, previewId) {
+            const previews = document.getElementById(previewId);
+            previews.innerHTML = '';
+            Array.from(files).forEach(file => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.classList.add('w-full', 'h-auto', 'rounded');
+                    previews.appendChild(img);
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        // Image to PDF Functionality
+        document.getElementById('convert-to-pdf').addEventListener('click', async () => {
+            const files = pdfInput.files;
+            if (files.length === 0) return alert('Please upload images.');
+            
+            const option = document.querySelector('input[name="pdf-option"]:checked').value;
+            const downloadLinks = document.getElementById('pdf-download-links');
+            downloadLinks.innerHTML = '';
+            
+            if (option === 'one') {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                let y = 10;
+                
+                for (let i = 0; i < files.length; i++) {
+                    const img = await loadImage(files[i]);
+                    const { width, height } = getDimensions(img, doc);
+                    doc.addImage(img, 'JPEG', 10, y, width, height, '', 'NONE');
+                    y += height + 10;
+                    if (y > doc.internal.pageSize.height - 10 && i < files.length - 1) {
+                        doc.addPage();
+                        y = 10;
+                    }
+                }
+                
+                const pdfBlob = doc.output('blob');
+                const url = URL.createObjectURL(pdfBlob);
+                const filename = files.length > 0 ? files[0].name.replace(/\.[^/.]+$/, "_combined.pdf") : 'combined.pdf';
+                addDownloadLink(downloadLinks, url, filename);
+            } else {
+                for (let i = 0; i < files.length; i++) {
+                    const { jsPDF } = window.jspdf;
+                    const doc = new jsPDF();
+                    const img = await loadImage(files[i]);
+                    const { width, height } = getDimensions(img, doc);
+                    doc.addImage(img, 'JPEG', 10, 10, width, height, '', 'NONE');
+                    const pdfBlob = doc.output('blob');
+                    const url = URL.createObjectURL(pdfBlob);
+                    const filename = files[i].name.replace(/\.[^/.]+$/, ".pdf");
+                    addDownloadLink(downloadLinks, url, filename);
+                }
+            }
+        });
+
+        function loadImage(file) {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => resolve(img);
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function getDimensions(img, doc) {
+            const ratio = img.width / img.height;
+            let width = doc.internal.pageSize.width - 20;
+            let height = width / ratio;
+            if (height > doc.internal.pageSize.height - 20) {
+                height = doc.internal.pageSize.height - 20;
+                width = height * ratio;
+            }
+            return { width, height };
+        }
+
+        // Image Diffuser Functionality
+        document.getElementById('diffuse-images').addEventListener('click', async () => {
+            const files = diffuserInput.files;
+            if (files.length === 0) return alert('Please upload images.');
+            
+            const addNoise = document.getElementById('add-noise').checked;
+            const adjustBrightness = document.getElementById('adjust-brightness').checked;
+            const tweakColor = document.getElementById('tweak-color').checked;
+            const randomPixel = document.getElementById('random-pixel').checked;
+            const randomizeMetadata = document.getElementById('randomize-metadata').checked;
+            
+            if (!addNoise && !adjustBrightness && !tweakColor && !randomPixel && !randomizeMetadata) return alert('Select at least one modification.');
+            
+            const downloadLinks = document.getElementById('diffuser-download-links');
+            downloadLinks.innerHTML = '';
+            
+            for (let i = 0; i < files.length; i++) {
+                let imageDataUrl = await new Promise(resolve => {
+                    const reader = new FileReader();
+                    reader.onload = e => resolve(e.target.result);
+                    reader.readAsDataURL(files[i]);
+                });
+
+                // Load image for pixel modifications
+                const img = await loadImage(files[i]);
+                const canvas = document.createElement('canvas');
+                canvas.width = img.width;
+                canvas.height = img.height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0);
+                
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const data = imageData.data;
+                
+                // Apply pixel modifications
+                if (addNoise) applyGaussianNoise(data, canvas.width, canvas.height);
+                if (adjustBrightness) applyBrightnessAdjustment(data);
+                if (tweakColor) applyColorTweak(data, canvas.width, canvas.height);
+                if (randomPixel) applyRandomPixel(data, canvas.width, canvas.height);
+                
+                ctx.putImageData(imageData, 0, 0);
+                
+                let modifiedDataUrl = canvas.toDataURL('image/jpeg');
+
+                // Apply metadata randomization if selected
+                if (randomizeMetadata) {
+                    let exifObj = piexif.load(modifiedDataUrl);
+                    const randomDate = new Date(Date.now() - Math.floor(Math.random() * 10000000000)).toISOString().slice(0, 19).replace('T', ' ');
+                    const randomNum = () => Math.floor(Math.random() * 1000) + 1;
+                    const randomRational = () => [randomNum(), randomNum()];
+                    const randomString = () => 'Random' + randomNum();
+
+                    // Set various tags in 0th IFD
+                    exifObj['0th'][piexif.ImageIFD.Make] = randomString();
+                    exifObj['0th'][piexif.ImageIFD.Model] = randomString();
+                    exifObj['0th'][piexif.ImageIFD.XResolution] = randomRational();
+                    exifObj['0th'][piexif.ImageIFD.YResolution] = randomRational();
+                    exifObj['0th'][piexif.ImageIFD.ResolutionUnit] = Math.random() > 0.5 ? 2 : 3;
+                    exifObj['0th'][piexif.ImageIFD.Software] = randomString();
+                    exifObj['0th'][piexif.ImageIFD.DateTime] = randomDate;
+                    exifObj['0th'][piexif.ImageIFD.Artist] = randomString();
+                    exifObj['0th'][piexif.ImageIFD.Copyright] = randomString();
+
+                    // Set various tags in Exif IFD
+                    exifObj['Exif'][piexif.ExifIFD.ExposureTime] = randomRational();
+                    exifObj['Exif'][piexif.ExifIFD.FNumber] = randomRational();
+                    exifObj['Exif'][piexif.ExifIFD.ExposureProgram] = randomNum() % 8 + 1;
+                    exifObj['Exif'][piexif.ExifIFD.ISOSpeedRatings] = randomNum() * 100;
+                    exifObj['Exif'][piexif.ExifIFD.DateTimeOriginal] = randomDate;
+                    exifObj['Exif'][piexif.ExifIFD.DateTimeDigitized] = randomDate;
+                    exifObj['Exif'][piexif.ExifIFD.ShutterSpeedValue] = randomRational();
+                    exifObj['Exif'][piexif.ExifIFD.ApertureValue] = randomRational();
+                    exifObj['Exif'][piexif.ExifIFD.BrightnessValue] = randomRational();
+                    exifObj['Exif'][piexif.ExifIFD.ExposureBiasValue] = randomRational();
+                    exifObj['Exif'][piexif.ExifIFD.LensMake] = randomString();
+                    exifObj['Exif'][piexif.ExifIFD.LensModel] = randomString();
+                    exifObj['Exif'][piexif.ExifIFD.Flash] = randomNum() % 256;
+                    exifObj['Exif'][piexif.ExifIFD.FocalLength] = randomRational();
+                    exifObj['Exif'][piexif.ExifIFD.UserComment] = randomString();
+
+                    // Set various tags in GPS IFD
+                    exifObj['GPS'][piexif.GPSIFD.GPSVersionID] = [2, 3, 0, 0];
+                    exifObj['GPS'][piexif.GPSIFD.GPSLatitudeRef] = Math.random() > 0.5 ? 'N' : 'S';
+                    exifObj['GPS'][piexif.GPSIFD.GPSLatitude] = [randomNum(), 1, randomNum(), 1, randomNum(), 100];
+                    exifObj['GPS'][piexif.GPSIFD.GPSLongitudeRef] = Math.random() > 0.5 ? 'E' : 'W';
+                    exifObj['GPS'][piexif.GPSIFD.GPSLongitude] = [randomNum(), 1, randomNum(), 1, randomNum(), 100];
+                    exifObj['GPS'][piexif.GPSIFD.GPSAltitudeRef] = Math.random() > 0.5 ? 0 : 1;
+                    exifObj['GPS'][piexif.GPSIFD.GPSAltitude] = randomRational();
+                    exifObj['GPS'][piexif.GPSIFD.GPSTimeStamp] = [randomNum(), 1, randomNum(), 1, randomNum(), 1];
+                    exifObj['GPS'][piexif.GPSIFD.GPSDateStamp] = randomDate.split(' ')[0].replace(/-/g, ':');
+
+                    const exifbytes = piexif.dump(exifObj);
+                    modifiedDataUrl = piexif.insert(exifbytes, modifiedDataUrl);
+                }
+                
+                const blob = await (await fetch(modifiedDataUrl)).blob();
+                const url = URL.createObjectURL(blob);
+                const originalName = files[i].name;
+                const filename = originalName.replace(/\.[^/.]+$/, ".jpg");
+                addPreviewAndDownload(downloadLinks, url, filename);
+            }
+        });
+
+        function applyGaussianNoise(data, width, height) {
+            const numSpots = Math.floor(Math.random() * 901) + 100; // 100-1000
+            const intensity = Math.random() * 0.9 + 0.1; // 0.1 to 1
+            for (let j = 0; j < numSpots; j++) {
+                const x = Math.floor(Math.random() * width);
+                const y = Math.floor(Math.random() * height);
+                const idx = (y * width + x) * 4;
+                const noise = (Math.random() * 2 - 1) * intensity;
+                data[idx] = clamp(data[idx] + noise);
+                data[idx+1] = clamp(data[idx+1] + noise);
+                data[idx+2] = clamp(data[idx+2] + noise);
+            }
+        }
+
+        function applyBrightnessAdjustment(data) {
+            const percent = Math.random() * 0.9 + 0.1; // 0.1% to 1%
+            const factor = 1 + (Math.random() > 0.5 ? 1 : -1) * (percent / 100);
+            for (let i = 0; i < data.length; i += 4) {
+                data[i] = clamp(data[i] * factor);
+                data[i+1] = clamp(data[i+1] * factor);
+                data[i+2] = clamp(data[i+2] * factor);
+            }
+        }
+
+        function applyColorTweak(data, width, height) {
+            const numSpots = Math.floor(Math.random() * 901) + 100; // 100-1000
+            for (let j = 0; j < numSpots; j++) {
+                const x = Math.floor(Math.random() * width);
+                const y = Math.floor(Math.random() * height);
+                const idx = (y * width + x) * 4;
+                data[idx] = clamp(data[idx] + Math.round(Math.random() * 2 - 1));
+                data[idx+1] = clamp(data[idx+1] + Math.round(Math.random() * 2 - 1));
+                data[idx+2] = clamp(data[idx+2] + Math.round(Math.random() * 2 - 1));
+            }
+        }
+
+        function applyRandomPixel(data, width, height) {
+            const totalPixels = width * height;
+            const numPixels = Math.floor(0.5 * totalPixels); // ~50%
+            for (let j = 0; j < numPixels; j++) {
+                const x = Math.floor(Math.random() * width);
+                const y = Math.floor(Math.random() * height);
+                const idx = (y * width + x) * 4;
+                data[idx] = clamp(data[idx] + Math.round(Math.random() * 4 - 2));
+                data[idx+1] = clamp(data[idx+1] + Math.round(Math.random() * 4 - 2));
+                data[idx+2] = clamp(data[idx+2] + Math.round(Math.random() * 4 - 2));
+            }
+        }
+
+        function clamp(value) {
+            return Math.max(0, Math.min(255, value));
+        }
+
+        function addDownloadLink(container, url, filename) {
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.textContent = `Download ${filename}`;
+            a.classList.add('block', 'text-cyan-400', 'hover:underline', 'mb-2');
+            container.appendChild(a);
+        }
+
+        function addPreviewAndDownload(container, url, filename) {
+            const div = document.createElement('div');
+            div.classList.add('flex', 'flex-col', 'items-center');
+            
+            const img = document.createElement('img');
+            img.src = url;
+            img.classList.add('w-32', 'h-auto', 'rounded', 'mb-2');
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.textContent = `Download ${filename}`;
+            a.classList.add('text-cyan-400', 'hover:underline');
+            
+            div.appendChild(img);
+            div.appendChild(a);
+            container.appendChild(div);
+        }
+    </script>
+</body>
+</html>

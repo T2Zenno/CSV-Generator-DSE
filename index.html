@@ -4,188 +4,91 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Form to CSV Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body {
-            font-family: 'Roboto', sans-serif;
-            background: linear-gradient(135deg, #1a1a2e, #16213e);
-            color: #e0e0e0;
-            max-width: 700px;
-            margin: 0 auto;
-            padding: 30px;
-            min-height: 100vh;
+        .nav-link {
+            position: relative;
+            transition: color 0.3s;
         }
-        nav {
-            border-bottom: 2px solid #00ffcc;
-            padding: 15px;
-            margin-bottom: 20px;
-            display: flex;
-            justify-content: flex-end;
-            align-items: center;
+        .nav-link:hover {
+            color: #0ff;
         }
-        nav a {
-            color: #00ffcc;
-            text-decoration: none;
-            font-weight: bold;
-            font-size: 1.1em;
-            transition: color 0.3s ease;
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: -2px;
+            left: 0;
+            background-color: #0ff;
+            transition: width 0.3s;
         }
-        nav a:hover {
-            color: #ff00ff;
+        .nav-link:hover::after {
+            width: 100%;
         }
-        h1 {
-            color: #00ffcc;
-            text-shadow: 0 0 10px rgba(0, 255, 204, 0.5);
-            text-align: center;
-            font-size: 2.5em;
-            margin-bottom: 10px;
-        }
-        p {
-            color: #b0b0b0;
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        form {
-            display: flex;
-            flex-direction: column;
-            background: rgba(255, 255, 255, 0.05);
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 0 20px rgba(0, 255, 204, 0.2);
-        }
-        label {
-            margin-top: 15px;
-            color: #00ffcc;
-            font-weight: bold;
-            text-shadow: 0 0 5px rgba(0, 255, 204, 0.3);
-        }
-        input, textarea {
-            padding: 10px;
-            margin-top: 5px;
-            background: #2a2a3e;
-            border: 1px solid #00ffcc;
-            border-radius: 5px;
-            color: #ffffff;
-            font-size: 1em;
-            transition: all 0.3s ease;
-        }
-        input:focus, textarea:focus {
-            outline: none;
-            box-shadow: 0 0 10px rgba(0, 255, 204, 0.5);
-            border-color: #ff00ff;
-        }
-        textarea {
-            resize: vertical;
-            min-height: 80px;
-        }
-        button {
-            margin-top: 25px;
-            padding: 12px;
-            background: linear-gradient(45deg, #00ffcc, #ff00ff);
-            color: #ffffff;
-            border: none;
-            border-radius: 5px;
-            font-size: 1.1em;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
-        }
-        button:hover {
-            background: linear-gradient(45deg, #ff00ff, #00ffcc);
-            box-shadow: 0 0 15px rgba(255, 0, 255, 0.5);
-            transform: translateY(-2px);
-        }
-        #preview-section, #editable-preview-section {
-            margin-top: 40px;
-        }
-        #preview-header, #editable-preview-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        #preview-section h2, #editable-preview-section h2 {
-            color: #ff00ff;
-            text-shadow: 0 0 10px rgba(255, 0, 255, 0.5);
-            font-size: 1.8em;
-            margin: 0;
-        }
-        #copyButton, #toNewlineButton, #toEnterButton, #autocorrectButton {
-            padding: 8px 16px;
-            font-size: 0.9em;
-            margin-left: 10px;
+        .nav-link.active::after {
+            width: 100%;
         }
         #toNewlineButton.active, #toEnterButton.active {
-            background: linear-gradient(45deg, #ff00ff, #00ffcc);
+            background-image: linear-gradient(to right, #ff00ff, #00ffcc);
             box-shadow: 0 0 15px rgba(255, 0, 255, 0.5);
         }
-        pre, textarea#editableCsvPreview {
-            background: #2a2a3e;
-            padding: 15px;
-            border: 1px solid #ff00ff;
-            border-radius: 5px;
-            color: #e0e0e0;
-            font-family: 'Courier New', monospace;
-            white-space: pre-wrap;
-            word-wrap: break-word;
-            box-shadow: 0 0 10px rgba(255, 0, 255, 0.2);
-            min-height: 60px;
-            height: auto;
-            overflow: auto;
-            width: 100%;
-            box-sizing: border-box;
-        }
     </style>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
 </head>
-<body>
-    <nav>
-        <a href="image-converter.html">Image to PDF/Diffuser</a>
+<body class="font-sans bg-gradient-to-br from-[#1a1a2e] to-[#16213e] text-gray-200 min-h-screen flex flex-col p-4">
+    <nav class="w-full mb-8">
+        <ul class="flex justify-center space-x-8">
+            <li><a href="image-converter.html" class="nav-link text-cyan-300 text-lg font-semibold">Image to PDF/Diffuser</a></li>
+            <li><a href="index.html" class="nav-link text-cyan-300 text-lg font-semibold active">CSV Generator</a></li>
+        </ul>
     </nav>
-    <h1>Form untuk Membuat CSV</h1>
-    <p>Masukkan nama header pada form di bawah ini. Preview CSV akan muncul secara live di bawah form. Klik tombol untuk download file CSV.</p>
-    
-    <form id="csvForm">
-        <label for="header1">Judul</label>
-        <input type="text" id="header1" name="header1" placeholder="Masukkan Judul..." required>
+    <div class="w-full">
+        <h1 class="text-[#00ffcc] text-4xl text-center font-bold drop-shadow-[0_0_10px_rgba(0,255,204,0.5)] mb-2">Form untuk Membuat CSV</h1>
+        <p class="text-gray-400 text-center mb-8">Masukkan nama header pada form di bawah ini. Preview CSV akan muncul secara live di bawah form. Klik tombol untuk download file CSV.</p>
         
-        <label for="header2">Deskripsi</label>
-        <textarea id="header2" name="header2" placeholder="Masukkan Deskripsi..." required></textarea>
-        
-        <label for="header3">Lokasi Gambar</label>
-        <input type="text" id="header3" name="header3" placeholder="C:\Tempat\Gambar\Berada.jpg" required>
-        
-        <label for="header4">Lokasi PDF</label>
-        <input type="text" id="header4" name="header4" placeholder="C:\Tempat\PDF\Berada.pdf" required>
-        
-        <label for="header5">Tag</label>
-        <input type="text" id="header5" name="header5" placeholder="Masukkan 1 Tag..." required>
-        
-        <label for="header6">Link Website</label>
-        <input type="text" id="header6" name="header6" placeholder="www.contoh.com" required>
-        
-        <button type="button" onclick="generateCSV()">Generate dan Download CSV</button>
-    </form>
+        <form id="csvForm" class="flex flex-col bg-white/5 p-5 rounded-lg shadow-[0_0_20px_rgba(0,255,204,0.2)]">
+            <label for="header1" class="mt-4 text-[#00ffcc] font-bold drop-shadow-[0_0_5px_rgba(0,255,204,0.3)]">Judul</label>
+            <input type="text" id="header1" name="header1" placeholder="Masukkan Judul..." required class="p-2 mt-1 bg-[#2a2a3e] border border-[#00ffcc] rounded-md text-white text-base focus:outline-none focus:ring-2 focus:ring-[#ff00ff] focus:border-[#ff00ff] transition-all duration-300">
+            
+            <label for="header2" class="mt-4 text-[#00ffcc] font-bold drop-shadow-[0_0_5px_rgba(0,255,204,0.3)]">Deskripsi</label>
+            <textarea id="header2" name="header2" placeholder="Masukkan Deskripsi..." required class="p-2 mt-1 bg-[#2a2a3e] border border-[#00ffcc] rounded-md text-white text-base focus:outline-none focus:ring-2 focus:ring-[#ff00ff] focus:border-[#ff00ff] transition-all duration-300 resize-y min-h-[80px]"></textarea>
+            
+            <label for="header3" class="mt-4 text-[#00ffcc] font-bold drop-shadow-[0_0_5px_rgba(0,255,204,0.3)]">Lokasi Gambar</label>
+            <input type="text" id="header3" name="header3" placeholder="C:\Tempat\Gambar\Berada.jpg" required class="p-2 mt-1 bg-[#2a2a3e] border border-[#00ffcc] rounded-md text-white text-base focus:outline-none focus:ring-2 focus:ring-[#ff00ff] focus:border-[#ff00ff] transition-all duration-300">
+            
+            <label for="header4" class="mt-4 text-[#00ffcc] font-bold drop-shadow-[0_0_5px_rgba(0,255,204,0.3)]">Lokasi PDF</label>
+            <input type="text" id="header4" name="header4" placeholder="C:\Tempat\PDF\Berada.pdf" required class="p-2 mt-1 bg-[#2a2a3e] border border-[#00ffcc] rounded-md text-white text-base focus:outline-none focus:ring-2 focus:ring-[#ff00ff] focus:border-[#ff00ff] transition-all duration-300">
+            
+            <label for="header5" class="mt-4 text-[#00ffcc] font-bold drop-shadow-[0_0_5px_rgba(0,255,204,0.3)]">Tag</label>
+            <input type="text" id="header5" name="header5" placeholder="Masukkan 1 Tag..." required class="p-2 mt-1 bg-[#2a2a3e] border border-[#00ffcc] rounded-md text-white text-base focus:outline-none focus:ring-2 focus:ring-[#ff00ff] focus:border-[#ff00ff] transition-all duration-300">
+            
+            <label for="header6" class="mt-4 text-[#00ffcc] font-bold drop-shadow-[0_0_5px_rgba(0,255,204,0.3)]">Link Website</label>
+            <input type="text" id="header6" name="header6" placeholder="www.contoh.com" required class="p-2 mt-1 bg-[#2a2a3e] border border-[#00ffcc] rounded-md text-white text-base focus:outline-none focus:ring-2 focus:ring-[#ff00ff] focus:border-[#ff00ff] transition-all duration-300">
+            
+            <button type="button" onclick="generateCSV()" class="mt-6 p-3 bg-gradient-to-r from-[#00ffcc] to-[#ff00ff] text-white rounded-md font-bold text-lg hover:bg-gradient-to-r hover:from-[#ff00ff] hover:to-[#00ffcc] hover:shadow-[0_0_15px_rgba(255,0,255,0.5)] hover:-translate-y-0.5 transition-all duration-300">Generate dan Download CSV</button>
+        </form>
 
-    <div id="preview-section">
-        <div id="preview-header">
-            <h2>Live Preview CSV</h2>
-            <div>
-                <button id="copyButton" type="button" onclick="copyCSV()">Copy to Clipboard</button>
-                <button id="toNewlineButton" type="button" onclick="convertToNewline()">\n</button>
-                <button id="toEnterButton" type="button" onclick="convertToEnter()">Enter</button>
+        <div id="preview-section" class="mt-10">
+            <div id="preview-header" class="flex justify-between items-center">
+                <h2 class="text-[#ff00ff] text-2xl font-bold drop-shadow-[0_0_10px_rgba(255,0,255,0.5)]">Live Preview CSV</h2>
+                <div class="flex gap-2">
+                    <button id="copyButton" type="button" onclick="copyCSV()" class="p-2 bg-gradient-to-r from-[#00ffcc] to-[#ff00ff] text-white rounded-md font-bold text-sm hover:bg-gradient-to-r hover:from-[#ff00ff] hover:to-[#00ffcc] hover:shadow-[0_0_15px_rgba(255,0,255,0.5)] transition-all duration-300">Copy to Clipboard</button>
+                    <button id="toNewlineButton" type="button" onclick="convertToNewline()" class="p-2 bg-gradient-to-r from-[#00ffcc] to-[#ff00ff] text-white rounded-md font-bold text-sm hover:bg-gradient-to-r hover:from-[#ff00ff] hover:to-[#00ffcc] hover:shadow-[0_0_15px_rgba(255,0,255,0.5)] transition-all duration-300">\n</button>
+                    <button id="toEnterButton" type="button" onclick="convertToEnter()" class="p-2 bg-gradient-to-r from-[#00ffcc] to-[#ff00ff] text-white rounded-md font-bold text-sm hover:bg-gradient-to-r hover:from-[#ff00ff] hover:to-[#00ffcc] hover:shadow-[0_0_15px_rgba(255,0,255,0.5)] transition-all duration-300">Enter</button>
+                </div>
             </div>
+            <pre id="csvPreview" class="mt-4 bg-[#2a2a3e] p-4 border border-[#ff00ff] rounded-md text-gray-200 font-mono whitespace-pre-wrap break-words shadow-[0_0_10px_rgba(255,0,255,0.2)] min-h-[60px] overflow-auto w-full box-border">(isi akan muncul saat Anda mengisi form)</pre>
         </div>
-        <pre id="csvPreview">(isi akan muncul saat Anda mengisi form)</pre>
-    </div>
 
-    <div id="editable-preview-section">
-        <div id="editable-preview-header">
-            <h2>Editable CSV Preview</h2>
-            <div>
-                <button id="autocorrectButton" type="button" onclick="autocorrectCSV()">Autocorrect CSV</button>
+        <div id="editable-preview-section" class="mt-10">
+            <div id="editable-preview-header" class="flex justify-between items-center">
+                <h2 class="text-[#ff00ff] text-2xl font-bold drop-shadow-[0_0_10px_rgba(255,0,255,0.5)]">Editable CSV Preview</h2>
+                <div>
+                    <button id="autocorrectButton" type="button" onclick="autocorrectCSV()" class="p-2 bg-gradient-to-r from-[#00ffcc] to-[#ff00ff] text-white rounded-md font-bold text-sm hover:bg-gradient-to-r hover:from-[#ff00ff] hover:to-[#00ffcc] hover:shadow-[0_0_15px_rgba(255,0,255,0.5)] transition-all duration-300">Autocorrect CSV</button>
+                </div>
             </div>
+            <textarea id="editableCsvPreview" placeholder="(isi akan muncul saat Anda mengisi form atau edit di sini)" class="mt-4 bg-[#2a2a3e] p-4 border border-[#ff00ff] rounded-md text-gray-200 font-mono whitespace-pre-wrap break-words shadow-[0_0_10px_rgba(255,0,255,0.2)] min-h-[60px] overflow-auto w-full box-border"></textarea>
         </div>
-        <textarea id="editableCsvPreview" placeholder="(isi akan muncul saat Anda mengisi form atau edit di sini)"></textarea>
     </div>
 
     <script>
